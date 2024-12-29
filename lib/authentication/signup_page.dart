@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:uni_mobile_app/home_screen.dart';
+import 'package:uni_mobile_app/authentication/login_page.dart';
 
 class SignupPage extends StatefulWidget {
   @override
@@ -36,7 +36,7 @@ class _SignupPageState extends State<SignupPage> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => LoginPage()),
       );
     } catch (e) {
 
@@ -86,7 +86,7 @@ class _SignupPageState extends State<SignupPage> {
 
             TextField(
               controller: passwordController,
-              obscureText: !isPasswordVisible,  // Toggle visibility based on the variable
+              obscureText: !isPasswordVisible,
               decoration: InputDecoration(
                 labelText: "Password",
                 border: OutlineInputBorder(),
