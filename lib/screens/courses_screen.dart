@@ -4,8 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class CoursesScreen extends StatefulWidget {
+  const CoursesScreen({super.key});
+
   @override
-  _CoursesScreenState createState() => _CoursesScreenState();
+  State<CoursesScreen> createState() => _CoursesScreenState();
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
@@ -16,11 +18,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   List<Map<String, dynamic>> courses = [];
   String? _selectedCourseId;
-  String _selectedStatus = "Not started yet";
-  int _selectedPercentage = 10;
+  double _selectedPercentage = 0.0;
 
-  final List<String> statusOptions = ["Not started yet", "In progress", "Completed"];
-  final List<int> percentageOptions = List.generate(10, (index) => (index + 1) * 10);
+  final List<double> percentageOptions = List.generate(11, (index) => index * 10.0);
 
   @override
   void initState() {
@@ -40,15 +40,26 @@ class _CoursesScreenState extends State<CoursesScreen> {
         setState(() {
           courses = snapshot.docs.map((doc) {
             var data = doc.data();
-            data['id'] = doc.id;
-            return data;
+            return {
+              ...data,
+              'id': doc.id,
+              'percentage': (data['percentage'] as num).toDouble(),
+            };
           }).toList();
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error fetching courses: $e")),
-      );
+      print("Error fetching courses: $e");
+    }
+  }
+
+  String _getStatus(double percentage) {
+    if (percentage == 0.0) {
+      return "Not started yet";
+    } else if (percentage == 100.0) {
+      return "Completed";
+    } else {
+      return "In progress";
     }
   }
 
@@ -63,9 +74,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
+          final snapshot = await _firestore
+          .collection('courses')
+          .where('userId', isEqualTo: user.uid)
+          .where('courseName', isEqualTo: _courseNameController.text.trim())
+          .get();
+      if (snapshot.docs.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("A course with this name already exists!")),
+        );
+        return;
+      }
+        String status = _getStatus(_selectedPercentage);
+
         await _firestore.collection('courses').add({
           'courseName': _courseNameController.text.trim(),
-          'status': _selectedStatus,
+          'status': status,
           'percentage': _selectedPercentage,
           'userId': user.uid,
           'createdAt': FieldValue.serverTimestamp(),
@@ -88,15 +112,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
   void _updateCourse() async {
     if (_selectedCourseId != null) {
       try {
+        String status = _getStatus(_selectedPercentage);
         await _firestore.collection('courses').doc(_selectedCourseId).update({
           'courseName': _courseNameController.text.trim(),
-          'status': _selectedStatus,
+          'status': status,
           'percentage': _selectedPercentage,
         });
-
         _fetchCourses();
         _clearForm();
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Course updated successfully!")),
         );
@@ -123,7 +146,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }
   }
 
-  String _formatDate(Timestamp timestamp) {
+  String _formatDate(Timestamp? timestamp) {
+    if (timestamp == null) return "Unknown date";
     DateTime date = timestamp.toDate();
     return DateFormat('dd-MM-yyyy').format(date);
   }
@@ -132,8 +156,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     _courseNameController.clear();
     setState(() {
       _selectedCourseId = null;
-      _selectedStatus = "Not started yet";
-      _selectedPercentage = 10;
+      _selectedPercentage = 0.0;
     });
   }
 
@@ -141,7 +164,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() {
       _selectedCourseId = course['id'];
       _courseNameController.text = course['courseName'];
-      _selectedStatus = course['status'];
       _selectedPercentage = course['percentage'];
     });
   }
@@ -168,33 +190,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 ),
               ),
             ),
-
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: DropdownButtonFormField<String>(
-                value: _selectedStatus,
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedStatus = newValue!;
-                  });
-                },
-                items: statusOptions.map((status) {
-                  return DropdownMenuItem(
-                    value: status,
-                    child: Text(status),
-                  );
-                }).toList(),
-                decoration: InputDecoration(
-                  labelText: 'Status',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                ),
-              ),
-            ),
-
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
-              child: DropdownButtonFormField<int>(
+              child: DropdownButtonFormField<double>(
                 value: _selectedPercentage,
                 onChanged: (newValue) {
                   setState(() {
@@ -214,23 +212,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 ),
               ),
             ),
-
-            if (_selectedCourseId != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Text(
-                  "Created At: ${_formatDate(Timestamp.fromMillisecondsSinceEpoch(courses.firstWhere((course) => course['id'] == _selectedCourseId)['createdAt'].millisecondsSinceEpoch))}",
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              ),
-
             ElevatedButton(
               onPressed: _selectedCourseId != null ? _updateCourse : _addCourse,
               child: Text(_selectedCourseId != null ? "Update Course" : "Add Course"),
             ),
-
             SizedBox(height: 20),
-
             Expanded(
               child: courses.isEmpty
                   ? Center(child: Text("No courses found."))
@@ -242,11 +228,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           margin: EdgeInsets.symmetric(vertical: 10),
                           child: ListTile(
                             contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                            title: Text(course['courseName'] ?? 'No Name', style: TextStyle(fontWeight: FontWeight.bold)),
+                            title: Text(course['courseName'], style: TextStyle(fontWeight: FontWeight.bold)),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(course['status'] ?? 'No Status'),
+                                Text(course['status']),
                                 SizedBox(height: 5),
                                 Text(
                                   "Progress: ${course['percentage']}%",

@@ -4,8 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uni_mobile_app/authentication/login_page.dart';
 
 class SignupPage extends StatefulWidget {
+  const SignupPage({super.key});
+
   @override
-  _SignupPageState createState() => _SignupPageState();
+  State<SignupPage> createState() => _SignupPageState();
 }
 
 class _SignupPageState extends State<SignupPage> {
@@ -70,26 +72,29 @@ class _SignupPageState extends State<SignupPage> {
               controller: nameController,
               decoration: InputDecoration(
                 labelText: "Name",
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15)),
                 )
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 30),
 
             TextField(
               controller: emailController,
               decoration: InputDecoration(
                 labelText: "Email",
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15)),
                 ),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 30),
 
             TextField(
               controller: passwordController,
               obscureText: !isPasswordVisible,
               decoration: InputDecoration(
                 labelText: "Password",
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15)),
                 suffixIcon: IconButton(
                   icon: Icon(
                     isPasswordVisible ? Icons.visibility : Icons.visibility_off,
@@ -103,10 +108,15 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 50),
             
             ElevatedButton(
               onPressed: signupUser,
+              style: ElevatedButton.styleFrom(
+              minimumSize: Size(double.infinity, 40),
+              padding: EdgeInsets.symmetric(vertical: 15),
+              textStyle: TextStyle(fontSize: 18),
+              ),
               child: Text("Sign up"),
             ),
           ],

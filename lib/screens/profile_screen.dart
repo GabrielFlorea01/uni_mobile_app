@@ -7,8 +7,10 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 
 class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
+
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
@@ -83,7 +85,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Delete profile picture from Firebase Storage
   Future<void> _deleteProfilePicture() async {
     try {
       User? user = _auth.currentUser;
@@ -91,7 +92,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final ref = _storage.ref().child('profile_pictures/${user.uid}.jpg');
         await ref.delete();
 
-        // Remove from Firestore
         await _firestore.collection('users').doc(user.uid).update({
           'profilePic': '',
         });
@@ -111,7 +111,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Update user name
   Future<void> _updateUserName() async {
     try {
       User? user = _auth.currentUser;
@@ -176,9 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: _deleteProfilePicture,
                 child: Text("Remove Profile Picture"),
               ),
-
             SizedBox(height: 20),
-
             Text(
               _userName ?? "Loading...",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -194,7 +191,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             SizedBox(height: 30),
-
             TextField(
               controller: _nameController,
               decoration: InputDecoration(

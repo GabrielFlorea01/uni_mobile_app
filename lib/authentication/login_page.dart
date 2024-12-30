@@ -4,8 +4,10 @@ import 'signup_page.dart';
 import 'package:uni_mobile_app/screens/home_screen.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
@@ -19,55 +21,42 @@ class _LoginPageState extends State<LoginPage> {
 
   void loginUser() async {
     setState(() {
-      errorMessage = null;
-    });
-
-    setState(() {
       isLoading = true;
     });
+    if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please complete both fields before signing in.")),
+      );
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
 
     try {
       await _auth.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
       );
     } catch (e) {
-      String message = 'An unexpected error occurred. Please try again later.';
+      String message = "An unexpected error occurred. Please try again later.";
       if (e is FirebaseAuthException) {
         switch (e.code) {
-          case 'user-not-found':
-            message = "Oops! We couldn't find an account with this email. Please check and try again.";
-            break;
-          case 'wrong-password':
-            message = "The password entered is incorrect. Please try again.";
-            break;
-          case 'invalid-email':
-            message = "The email address seems to be invalid. Please use a valid email.";
-            break;
-          case 'too-many-requests':
-            message = "Too many attempts! Please wait a while and try again.";
-            break;
-          case 'email-already-in-use':
-            message = "This email is already registered. Please try logging in or use a different email.";
-            break;
-          case 'operation-not-allowed':
-            message = "This sign-in method is currently disabled. Please contact support.";
+          case 'invalid-credential':
+            message = "The provided credentials are invalid. Please check the EMAIL and PASSWORD and try again.";
             break;
           default:
             message = "Something went wrong. Please try again later.";
+            break;
         }
-      } else {
-        message = "An unexpected error occurred. Please check your connection and try again.";
       }
-
-      setState(() {
-        errorMessage = message;
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
     } finally {
       setState(() {
         isLoading = false;
@@ -77,16 +66,16 @@ class _LoginPageState extends State<LoginPage> {
 
   void resetPassword() async {
     String email = emailController.text.trim();
+
     if (email.isEmpty) {
-      setState(() {
-        errorMessage = "Please enter your email to reset your password.";
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please enter your email to reset your password!")),
+      );
       return;
     }
 
     try {
       await _auth.sendPasswordResetEmail(email: email);
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Password reset email sent. Check your inbox!'),
@@ -99,11 +88,15 @@ class _LoginPageState extends State<LoginPage> {
       });
     } catch (e) {
       String message = "An error occurred while sending the reset email.";
+
       if (e is FirebaseAuthException) {
         if (e.code == 'invalid-email') {
           message = "The email address is invalid. Please enter a valid email.";
+        } else if (e.code == 'user-not-found') {
+          message = "No account found with this email. Please check and try again.";
         }
       }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
@@ -128,6 +121,29 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  'assets/CoursesTrackerIcon.png',
+                  height: 200,
+                  width: 200,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            SizedBox(height: 100),
+
             if (errorMessage != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -137,25 +153,27 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             if (!isResetPasswordMode) ...[
-
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(
                   labelText: "Email",
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15)
+                  ),
                   errorText: errorMessage != null && emailController.text.isEmpty
                       ? 'Please enter your email.'
                       : null,
                 ),
               ),
               SizedBox(height: 16),
-
               TextField(
                 controller: passwordController,
                 obscureText: !isPasswordVisible,
                 decoration: InputDecoration(
                   labelText: "Password",
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15)
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       isPasswordVisible ? Icons.visibility : Icons.visibility_off,
@@ -173,16 +191,18 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               SizedBox(height: 20),
-
-
               isLoading
                   ? CircularProgressIndicator()
                   : ElevatedButton(
                       onPressed: loginUser,
+                      style: ElevatedButton.styleFrom(
+                      minimumSize: Size(double.infinity, 40),
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                      textStyle: TextStyle(fontSize: 18),
+                    ),
                       child: Text("Login"),
                     ),
               SizedBox(height: 10),
-
               TextButton(
                 onPressed: () {
                   Navigator.push(
@@ -192,14 +212,12 @@ class _LoginPageState extends State<LoginPage> {
                 },
                 child: Text("Don't have an account? Sign up"),
               ),
-              SizedBox(height: 10),
-
+              SizedBox(height: 20),
               TextButton(
                 onPressed: switchToResetPasswordMode,
-                child: Text("Forgot your password? Reset here"),
+                child: Text("Forgot your password?"),
               ),
             ] else ...[
-
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(
@@ -210,13 +228,11 @@ class _LoginPageState extends State<LoginPage> {
                       : null,
                 ),
               ),
-
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: resetPassword,
                 child: Text("Send Reset Link"),
               ),
-
               SizedBox(height: 10),
               TextButton(
                 onPressed: () {
