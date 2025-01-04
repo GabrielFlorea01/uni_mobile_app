@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class CoursesScreen extends StatefulWidget {
-  const CoursesScreen({super.key});
+  final Function onCoursesUpdated;
+
+  const CoursesScreen({super.key, required this.onCoursesUpdated});
 
   @override
   State<CoursesScreen> createState() => _CoursesScreenState();
@@ -16,40 +18,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   final TextEditingController _courseNameController = TextEditingController();
 
-  List<Map<String, dynamic>> courses = [];
   String? _selectedCourseId;
   double _selectedPercentage = 0.0;
 
   final List<double> percentageOptions = List.generate(11, (index) => index * 10.0);
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchCourses();
-  }
-
-  void _fetchCourses() async {
-    try {
-      User? user = _auth.currentUser;
-      if (user != null) {
-        final snapshot = await _firestore
-            .collection('courses')
-            .where('userId', isEqualTo: user.uid)
-            .get();
-
-        setState(() {
-          courses = snapshot.docs.map((doc) {
-            var data = doc.data();
-            return {
-              ...data,
-              'id': doc.id,
-              'percentage': (data['percentage'] as num).toDouble(),
-            };
-          }).toList();
-        });
-      }
-    } catch (e) {
-      print("Error fetching courses: $e");
+  Stream<QuerySnapshot> _coursesStream() {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      return _firestore
+          .collection('courses')
+          .where('userId', isEqualTo: user.uid)
+          .snapshots();
+    } else {
+      return Stream.empty();
     }
   }
 
@@ -70,21 +52,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
       );
       return;
     }
-
     try {
       User? user = _auth.currentUser;
       if (user != null) {
-          final snapshot = await _firestore
-          .collection('courses')
-          .where('userId', isEqualTo: user.uid)
-          .where('courseName', isEqualTo: _courseNameController.text.trim())
-          .get();
-      if (snapshot.docs.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("A course with this name already exists!")),
-        );
-        return;
-      }
+        final snapshot = await _firestore
+            .collection('courses')
+            .where('userId', isEqualTo: user.uid)
+            .where('courseName', isEqualTo: _courseNameController.text.trim())
+            .get();
+
+        if (snapshot.docs.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("A course with this name already exists!")),
+          );
+          return;
+        }
+
         String status = _getStatus(_selectedPercentage);
 
         await _firestore.collection('courses').add({
@@ -95,7 +78,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
           'createdAt': FieldValue.serverTimestamp(),
         });
 
-        _fetchCourses();
+        widget.onCoursesUpdated();
         _clearForm();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -118,7 +101,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
           'status': status,
           'percentage': _selectedPercentage,
         });
-        _fetchCourses();
+
+        widget.onCoursesUpdated();
         _clearForm();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Course updated successfully!")),
@@ -134,7 +118,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   void _deleteCourse(String courseId) async {
     try {
       await _firestore.collection('courses').doc(courseId).delete();
-      _fetchCourses();
+      widget.onCoursesUpdated();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Course deleted successfully!")),
@@ -172,7 +156,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Manage Courses"),
+        title: Text("Courses Manager"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -218,42 +202,71 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
             SizedBox(height: 20),
             Expanded(
-              child: courses.isEmpty
-                  ? Center(child: Text("No courses found."))
-                  : ListView.builder(
-                      itemCount: courses.length,
-                      itemBuilder: (context, index) {
-                        final course = courses[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          child: ListTile(
-                            contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                            title: Text(course['courseName'], style: TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(course['status']),
-                                SizedBox(height: 5),
-                                Text(
-                                  "Progress: ${course['percentage']}%",
-                                  style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
-                                ),
-                                SizedBox(height: 5),
-                                Text(
-                                  "Course added on: ${_formatDate(course['createdAt'])}",
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                              ],
-                            ),
-                            onTap: () => _onCourseSelected(course),
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete),
-                              onPressed: () => _deleteCourse(course['id']),
-                            ),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _coursesStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(child: Text("Error: ${snapshot.error}"));
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return Center(child: Text("No courses found."));
+                  }
+
+                  var courses = snapshot.data!.docs.map((doc) {
+                    var data = doc.data() as Map<String, dynamic>;
+                    return {
+                      'id': doc.id,
+                      'courseName': data['courseName'],
+                      'status': data['status'],
+                      'percentage': (data['percentage'] as num).toDouble(),
+                      'createdAt': data['createdAt'],
+                    };
+                  }).toList();
+
+                  return ListView.builder(
+                    itemCount: courses.length,
+                    itemBuilder: (context, index) {
+                      final course = courses[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 10),
+                        child: ListTile(
+                          contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                          title: Text(
+                            course['courseName'],
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                        );
-                      },
-                    ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(course['status']),
+                              SizedBox(height: 5),
+                              Text(
+                                "Progress: ${course['percentage']}%",
+                                style: TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                "Course added on: ${_formatDate(course['createdAt'])}",
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                          onTap: () => _onCourseSelected(course),
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () => _deleteCourse(course['id']),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),

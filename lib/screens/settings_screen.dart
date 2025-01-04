@@ -12,16 +12,28 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-
+  bool isLoggingOut = false;
 
   void _logout(BuildContext context) async {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  await _auth.signOut();
-  Navigator.pushAndRemoveUntil(
-    context,
-    MaterialPageRoute(builder: (context) => LoginPage()),
-    (Route<dynamic> route) => false,
+    setState(() {
+      isLoggingOut = true;
+    });
+
+
+    await Future.delayed(Duration(seconds: 1));
+
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+    await _auth.signOut();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+      (Route<dynamic> route) => false,
     );
+
+    setState(() {
+      isLoggingOut = false;
+    });
   }
 
   @override
@@ -41,34 +53,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Theme", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SwitchListTile(
-              title: Text("Dark Mode"),
-              value: Theme.of(context).brightness == Brightness.dark,
-              onChanged: (bool value) {
-                final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-                themeProvider.setTheme(value ? ThemeMode.dark : ThemeMode.light);
-              },
-            ),
-            Spacer(),
-            GestureDetector(
-              onTap: () => _logout(context),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.logout, color: Colors.blue),
-                    SizedBox(width: 8),
-                    Text(
-                      "Log Out",
-                      style: TextStyle(fontSize: 18, color: Colors.blue),
-                    ),
-                  ],
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              child: Text(
+                "Theme",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            SizedBox(height: 40),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 3,
+              child: SwitchListTile(
+                title: Text(
+                  "Dark Mode",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                value: Theme.of(context).brightness == Brightness.dark,
+                onChanged: (bool value) {
+                  final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+                  themeProvider.setTheme(value ? ThemeMode.dark : ThemeMode.light);
+                },
+              ),
+            ),
+            Spacer(),
+            GestureDetector(
+              onTap: isLoggingOut ? null : () => _logout(context),
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      isLoggingOut
+                          ? CircularProgressIndicator()
+                          : Icon(Icons.logout, color: Colors.blue),
+                      SizedBox(width: 8),
+                      Text(
+                        isLoggingOut ? "Logging out..." : "Log Out",
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.blue,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
           ],
         ),
       ),

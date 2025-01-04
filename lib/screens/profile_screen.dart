@@ -140,71 +140,93 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: Text("Profile"),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Center(
-              child: Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundImage: _profilePictureUrl != null && _profilePictureUrl!.isNotEmpty
-                        ? NetworkImage(_profilePictureUrl!)
-                        : AssetImage('assets/placeholder.png') as ImageProvider,
-                    backgroundColor: Colors.grey[200],
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: CircleAvatar(
-                      backgroundColor: Colors.blue,
-                      child: IconButton(
-                        icon: Icon(Icons.edit, color: Colors.white),
-                        onPressed: _uploadProfilePicture,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: constraints.maxWidth > 600 ? 500 : double.infinity,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Center(
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 60,
+                              backgroundImage: _profilePictureUrl != null && _profilePictureUrl!.isNotEmpty
+                                  ? NetworkImage(_profilePictureUrl!)
+                                  : AssetImage('assets/placeholder.png') as ImageProvider,
+                              backgroundColor: Colors.grey[200],
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: CircleAvatar(
+                                backgroundColor: Colors.blue,
+                                child: IconButton(
+                                  icon: Icon(Icons.edit, color: Colors.white),
+                                  onPressed: _uploadProfilePicture,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                      SizedBox(height: 30),
+                      if (_profilePictureUrl != null && _profilePictureUrl!.isNotEmpty)
+                        ElevatedButton(
+                          onPressed: _deleteProfilePicture,
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          ),
+                          child: Text("Remove Profile Picture"),
+                        ),
+                      SizedBox(height: 60),
+                      Text(
+                        _userName ?? "Loading...",
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 15),
+                      Text(
+                        _userEmail ?? "Loading...",
+                        style: TextStyle(fontSize: 15, color: Colors.grey),
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        "Account Created On: ${_createdAt ?? "Unknown"}",
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      SizedBox(height: 50),
+                      TextField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          labelText: "Update Name",
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _updateUserName,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          textStyle: TextStyle(fontSize: 16),
+                        ),
+                        child: Text("Update Name"),
+                      ),
+                      SizedBox(height: 100),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-            SizedBox(height: 20),
-            if (_profilePictureUrl != null && _profilePictureUrl!.isNotEmpty)
-              ElevatedButton(
-                onPressed: _deleteProfilePicture,
-                child: Text("Remove Profile Picture"),
-              ),
-            SizedBox(height: 20),
-            Text(
-              _userName ?? "Loading...",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 5),
-            Text(
-              _userEmail ?? "Loading...",
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            SizedBox(height: 5),
-            Text(
-              "Account Created On: ${_createdAt ?? "Unknown"}",
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            SizedBox(height: 30),
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: "Update Name",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _updateUserName,
-              child: Text("Update Name"),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

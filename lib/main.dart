@@ -5,6 +5,7 @@ import 'package:uni_mobile_app/authentication/login_page.dart';
 import 'package:uni_mobile_app/screens/home_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:uni_mobile_app/theme/theme_provider.dart';
+import 'package:firebase_in_app_messaging/firebase_in_app_messaging.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,10 @@ class AuthWrapper extends StatelessWidget {
           return Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasData) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            FirebaseInAppMessaging.instance.triggerEvent('in_app_message');
+          });
+
           return HomeScreen();
         }
         return LoginPage();
