@@ -23,13 +23,14 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       isLoading = true;
     });
+
     if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please complete both fields before signing in.")),
-      );
       setState(() {
         isLoading = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please complete both fields before signing in.")),
+      );
       return;
     }
 
@@ -116,135 +117,148 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(isResetPasswordMode ? "Reset Password" : "Login")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: constraints.maxWidth > 600 ? 400 : double.infinity,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.asset(
+                            'assets/CoursesTrackerIcon.png',
+                            height: constraints.maxWidth > 600 ? 150 : 200,
+                            width: constraints.maxWidth > 600 ? 150 : 200,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: constraints.maxWidth > 600 ? 50 : 100),
+
+                      if (errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            errorMessage!,
+                            style: TextStyle(color: Colors.red, fontSize: 16),
+                          ),
+                        ),
+                      if (!isResetPasswordMode) ...[
+                        TextField(
+                          controller: emailController,
+                          decoration: InputDecoration(
+                            labelText: "Email",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            errorText: errorMessage != null && emailController.text.isEmpty
+                                ? 'Please enter your email.'
+                                : null,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        TextField(
+                          controller: passwordController,
+                          obscureText: !isPasswordVisible,
+                          decoration: InputDecoration(
+                            labelText: "Password",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                                color: Color.fromARGB(255, 115, 58, 135),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  isPasswordVisible = !isPasswordVisible;
+                                });
+                              },
+                            ),
+                            errorText: passwordController.text.isEmpty && errorMessage != null
+                                ? 'Please enter your password.'
+                                : null,
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        isLoading
+                            ? CircularProgressIndicator()
+                            : ElevatedButton(
+                                onPressed: loginUser,
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: Size(double.infinity, 40),
+                                  padding: EdgeInsets.symmetric(vertical: 15),
+                                  textStyle: TextStyle(fontSize: 18),
+                                ),
+                                child: Text("Login"),
+                              ),
+                        SizedBox(height: 10),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => SignupPage()),
+                            );
+                          },
+                          child: Text("Don't have an account? Sign up"),
+                        ),
+                        SizedBox(height: 20),
+                        TextButton(
+                          onPressed: switchToResetPasswordMode,
+                          child: Text("Forgot your password?"),
+                        ),
+                      ] else ...[
+                        TextField(
+                          controller: emailController,
+                          decoration: InputDecoration(
+                            labelText: "Enter your email",
+                            border: OutlineInputBorder(),
+                            errorText: errorMessage != null && emailController.text.isEmpty
+                                ? 'Please enter your email.'
+                                : null,
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: resetPassword,
+                          child: Text("Send Reset Link"),
+                        ),
+                        SizedBox(height: 10),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              isResetPasswordMode = false;
+                            });
+                          },
+                          child: Text("Back to Login"),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.asset(
-                  'assets/CoursesTrackerIcon.png',
-                  height: 200,
-                  width: 200,
-                  fit: BoxFit.cover,
                 ),
               ),
             ),
-            SizedBox(height: 100),
-
-            if (errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(
-                  errorMessage!,
-                  style: TextStyle(color: Colors.red, fontSize: 16),
-                ),
-              ),
-            if (!isResetPasswordMode) ...[
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15)
-                  ),
-                  errorText: errorMessage != null && emailController.text.isEmpty
-                      ? 'Please enter your email.'
-                      : null,
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: passwordController,
-                obscureText: !isPasswordVisible,
-                decoration: InputDecoration(
-                  labelText: "Password",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15)
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                      color: Color.fromARGB(255, 115, 58, 135),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        isPasswordVisible = !isPasswordVisible;
-                      });
-                    },
-                  ),
-                  errorText: passwordController.text.isEmpty && errorMessage != null
-                      ? 'Please enter your password.'
-                      : null,
-                ),
-              ),
-              SizedBox(height: 20),
-              isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: loginUser,
-                      style: ElevatedButton.styleFrom(
-                      minimumSize: Size(double.infinity, 40),
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                      textStyle: TextStyle(fontSize: 18),
-                    ),
-                      child: Text("Login"),
-                    ),
-              SizedBox(height: 10),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SignupPage()),
-                  );
-                },
-                child: Text("Don't have an account? Sign up"),
-              ),
-              SizedBox(height: 20),
-              TextButton(
-                onPressed: switchToResetPasswordMode,
-                child: Text("Forgot your password?"),
-              ),
-            ] else ...[
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: "Enter your email",
-                  border: OutlineInputBorder(),
-                  errorText: errorMessage != null && emailController.text.isEmpty
-                      ? 'Please enter your email.'
-                      : null,
-                ),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: resetPassword,
-                child: Text("Send Reset Link"),
-              ),
-              SizedBox(height: 10),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    isResetPasswordMode = false;
-                  });
-                },
-                child: Text("Back to Login"),
-              ),
-            ],
-          ],
-        ),
+          );
+        },
       ),
     );
   }
