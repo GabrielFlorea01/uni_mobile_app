@@ -15,9 +15,21 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  String _searchQuery = '';
+  final FocusNode _searchFocusNode = FocusNode();
 
   Stream<QuerySnapshot> _coursesStream() {
     String userId = FirebaseAuth.instance.currentUser!.uid;
+
+    if (_searchQuery.isNotEmpty) {
+      return FirebaseFirestore.instance
+          .collection('courses')
+          .where('userId', isEqualTo: userId)
+          .where('courseName', isGreaterThanOrEqualTo: _searchQuery)
+          .where('courseName', isLessThanOrEqualTo: '$_searchQuery\uf8ff')
+          .snapshots();
+    }
+
     return FirebaseFirestore.instance
         .collection('courses')
         .where('userId', isEqualTo: userId)
@@ -71,74 +83,105 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text("Home"),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _coursesStream(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          }
-
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Text(
-                "No courses available.",
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-            );
-          }
-
-          var courses = snapshot.data!.docs.map((doc) {
-            var data = doc.data() as Map<String, dynamic>;
-            return {
-              "id": doc.id,
-              "courseName": data['courseName'],
-              "status": data['status'],
-              "percentage": (data['percentage'] as num).toDouble(),
-              "createdAt": data['createdAt'],
-            };
-          }).toList();
-
-          return ListView.builder(
-            itemCount: courses.length,
-            itemBuilder: (context, index) {
-              final course = courses[index];
-              return Card(
-                margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).requestFocus(FocusNode());
+        },
+        child: Column(
+          children: [
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                focusNode: _searchFocusNode,
+                onChanged: (query) {
+                  setState(() {
+                    _searchQuery = query;
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Search Courses',
+                  hintText: 'Enter course name...',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-                elevation: 3,
-                child: ListTile(
-                  title: Text(
-                    course["courseName"],
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    "Status: ${course["status"]}\n"
-                    "Percentage: ${course["percentage"]}%\n"
-                    "Created at: ${_formatDate(course["createdAt"])}",
-                    style: TextStyle(color: Colors.grey[700]),
-                  ),
-                  trailing: Icon(Icons.arrow_forward),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CoursesScreen(
-                          onCoursesUpdated: _fetchCourses,
-                        ),
+              ),
+            ),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _coursesStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(child: Text("Error: ${snapshot.error}"));
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return Center(
+                      child: Text(
+                        "No courses found",
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
                       ),
                     );
-                  },
-                ),
-              );
-            },
-          );
-        },
+                  }
+
+                  var courses = snapshot.data!.docs.map((doc) {
+                    var data = doc.data() as Map<String, dynamic>;
+                    return {
+                      "id": doc.id,
+                      "courseName": data['courseName'],
+                      "status": data['status'],
+                      "percentage": (data['percentage'] as num).toDouble(),
+                      "createdAt": data['createdAt'],
+                    };
+                  }).toList();
+
+                  return ListView.builder(
+                    itemCount: courses.length,
+                    itemBuilder: (context, index) {
+                      final course = courses[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        elevation: 3,
+                        child: ListTile(
+                          title: Text(
+                            course["courseName"],
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            "Status: ${course["status"]}\n"
+                            "Percentage: ${course["percentage"]}%\n"
+                            "Created at: ${_formatDate(course["createdAt"])}",
+                            style: TextStyle(color: Colors.grey[700]),
+                          ),
+                          trailing: Icon(Icons.arrow_forward),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CoursesScreen(
+                                  onCoursesUpdated: _fetchCourses,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
