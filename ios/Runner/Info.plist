@@ -72,5 +72,30 @@
         <string>fetch</string>
         <string>remote-notification</string>
     </array>
+
+    <key>API_KEY</key>
+    <string>AIzaSyDWLkjEEabPmM05W9rDTl6WH54eKAfREtk</string>
+    <key>GCM_SENDER_ID</key>
+    <string>559013214521</string>
+    <key>PROJECT_ID</key>
+    <string>courses-tracker-57856</string>
+    <key>STORAGE_BUCKET</key>
+    <string>courses-tracker-57856.firebasestorage.app</string>
+    <key>GOOGLE_APP_ID</key>
+    <string>1:559013214521:ios:5338f78ca98f7e929f10e8</string>
+    <key>CLIENT_ID</key>
+    <string>559013214521-gvs02tf8gpuhfldpatbn5qkubknl0oie.apps.googleusercontent.com</string>
+    <key>REVERSED_CLIENT_ID</key>
+    <string>com.googleusercontent.apps.559013214521-gvs02tf8gpuhfldpatbn5qkubknl0oie</string>
+
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.559013214521-e18oammh0bcb9ol4ls12v84sdchrahqj.apps.googleusercontent.com</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

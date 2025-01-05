@@ -114,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(isResetPasswordMode ? "Reset Password" : "Login")),
+      appBar: AppBar(title: Text(isResetPasswordMode ? "Reset Password" : "Courses Tracker")),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return Padding(
@@ -133,7 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withAlpha(51),
                               blurRadius: 10,
                               offset: Offset(0, 4),
                             ),
@@ -142,7 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: Image.asset(
-                            'assets/CoursesTrackerIcon.png',
+                            'assets/CoursesTracker.png',
                             height: constraints.maxWidth > 600 ? 150 : 200,
                             width: constraints.maxWidth > 600 ? 150 : 200,
                             fit: BoxFit.cover,

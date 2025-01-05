@@ -186,7 +186,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           child: Text("Remove Profile Picture"),
                         ),
-                      SizedBox(height: 60),
+                      SizedBox(height: 20),
                       Text(
                         _userName ?? "Loading...",
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -201,7 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         "Account Created On: ${_createdAt ?? "Unknown"}",
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
-                      SizedBox(height: 50),
+                      SizedBox(height: 80),
                       TextField(
                         controller: _nameController,
                         decoration: InputDecoration(
