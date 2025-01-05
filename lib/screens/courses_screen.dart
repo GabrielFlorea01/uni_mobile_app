@@ -80,7 +80,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
         widget.onCoursesUpdated();
         _clearForm();
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Course added successfully!")),
         );

@@ -23,7 +23,6 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       isLoading = true;
     });
-
     if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
       setState(() {
         isLoading = false;
@@ -33,7 +32,6 @@ class _LoginPageState extends State<LoginPage> {
       );
       return;
     }
-
     try {
       await _auth.signInWithEmailAndPassword(
         email: emailController.text.trim(),
