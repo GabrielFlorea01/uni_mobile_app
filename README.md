@@ -48,7 +48,7 @@ For Firebase authentication and Firestore to work, you'll need to follow these s
 
   
 
-- Create a Firebase project if you don’t have one already.
+- Create a [Firebase project](https://console.firebase.google.com/u/0/) if you don’t have one already.
 
 - Enable Firebase Authentication for your project.
 
