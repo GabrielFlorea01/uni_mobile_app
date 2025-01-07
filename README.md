@@ -1,5 +1,5 @@
 
-# Courses Tracker - for Uni Mobile Apps
+# Courses Tracker - for Uni Mobile Apps with Flutter
 
 This is a mobile app built with Flutter designed to help users track and manage their courses. It allows users to monitor their progress across different courses, whether they are online, offline, or self-paced. The app integrates Firebase for backend and storage and provides a seamless user experience for managing learning activities.
 
