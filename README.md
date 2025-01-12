@@ -35,12 +35,6 @@ git clone https://github.com/GabrielFlorea01/uni_mobile_app.git
 flutter pub get
 ```
 
-## Set up Firebase
-
-Create a Firebase project on Firebase Console.
-
-[Follow the FlutterFire setup guide](https://firebase.google.com/docs/flutter/setup?platform=ios) to integrate Firebase into your app (make sure to configure Firebase for iOS)
-
 
 ### Firebase Setup
 
@@ -71,9 +65,9 @@ flutter run
 
 **lib/** - Contains the Flutter app code.
 
-**assets/** - Stores images and other static resources.
-
 **ios/** - Contains the files for running the IOS app.
+
+**assets/** - Stores images and other static resources.
 
   
 ## Acknowledgments

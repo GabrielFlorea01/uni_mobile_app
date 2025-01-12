@@ -67,7 +67,6 @@ flutter:
     - assets/placeholder.png
     - assets/CoursesTrackerIcon.png
     - assets/CoursesTracker.png
-    - assets/google_icon.png
 
 
   # The following line ensures that the Material Icons font is
