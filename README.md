@@ -44,9 +44,9 @@ For Firebase authentication and Firestore to work, you'll need to follow these s
 
 - Create a [Firebase project](https://console.firebase.google.com/u/0/) if you don’t have one already.
 
-- Enable Firebase Authentication for your project.
+- Enable **Firebase Authentication, Storage and Messaging** in your project
 
-- Set up Firestore database to store course details.
+- Set up Firestore Database to store course details.
 
 - Follow the instructions in the FlutterFire documentation to connect your Flutter app with Firebase.
 
