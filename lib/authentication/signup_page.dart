@@ -35,6 +35,9 @@ class _SignupPageState extends State<SignupPage> {
         'createdAt': FieldValue.serverTimestamp(),
         'profilePic': '',
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("You were signed up successfully !")),
+      );
 
       Navigator.pushReplacement(
         context,
